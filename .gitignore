@@ -4,7 +4,7 @@
 *.swo
 .*.swp
 *.log
-*.cvs
+*.csv
 *.pyc
 bin/
 pkg/
