@@ -3,15 +3,30 @@
 import pandas
 import numpy as np
 import datetime
+import dataapi
+
+def preprocessData(df, removeCols):
+	"""df - pandas DataFrame对象，包含一天的因子数据
+		removeCols - 需要删掉的无用列名列表
+	"""
+	df1=df.drop(removeCols, axis=1)
+		
+	return df1
 
 #对数据标准化
-def handleStandard(df, includeCols, excludeCols):
+def handleStandard(df, keyCols, includeCols, excludeCols):
 	"""	df - pandas DataFrame对象，包含一天的因子数据
-		includeCols - 需要标准化的因子
-		excludeCols - 不需要标准化的因子
-	""" 
+		keyCols - 用于从原数据中生成新数据的列列名，为list类型
+		includeCols - 需要标准化的因子，为list类型
+		excludeCols - 不需要标准化的因子，为list类型
+
+		return - pandas DataFrame对象，包含的标准化之后数据列名跟原来列名名称相同
+	"""
+	#生成数据对象，用来存放标准化之后数据
+	newdf = df.loc[:, keyCols]
 	industries = df['IndustrySecuCode_I'].dropna().unique()
 	columns = df.columns
+	#print columns
 	for column in columns:
 		#print column
 		if column in excludeCols:
@@ -28,6 +43,8 @@ def handleStandard(df, includeCols, excludeCols):
 			df[nmabs] = np.nan
 			df[nmadj] = np.nan
 			df[nmstd] = np.nan
+
+			newdf[column] = np.nan
 			start = datetime.datetime.now()
 			for industry in industries:
 				indusdata = df[df['IndustrySecuCode_I'] == industry]
@@ -35,12 +52,15 @@ def handleStandard(df, includeCols, excludeCols):
 				stddata = getIndustryStandardData(df, column, nmabs, nmadj, nmstd, industry, 'IndustrySecuCode_I')
 				#将数据更新到主表中
 				for idx in stddata.index:
-					df.loc[idx, nmstd] = stddata[idx]
+					#df.loc[idx, nmstd] = stddata[idx]
+					newdf.loc[idx, column] = stddata[idx]
 
 			end = datetime.datetime.now()
 			print 'cost: {0}'.format(end-start)
 		else:
 				print 'Cannot support: {0}'.format(column)
+		
+	return newdf
 
 #对某一行业某一列做标准化
 def getIndustryStandardData(df, column, nmabs, nmadj, nmstd, industryCode, industryColumn='IndustrySecuCode_I'):
@@ -51,6 +71,8 @@ def getIndustryStandardData(df, column, nmabs, nmadj, nmstd, industryCode, indus
 		nmstd - 列名，用于保存行业内标准化后的值
 		industryCode - 一级行业代码
 		industryColumn - 一级行业列名，用于对数据分组
+
+		return - 本列数据
 	"""
 	#获取本行业数据
 	indusdata = df[df[industryColumn] == industryCode]
@@ -95,15 +117,70 @@ def isZero(x):
 		"""
 		return abs(x) < 0.000000001
 
+def handleOneDay(td, removeCols, keyCols, includeCols, excludeCols):
+	""" td - 交易日为datetime.date类型
+		removeCols - 需要删掉的无用列列名，为list类型
+		keyCols - 关键列列名，为list类型
+		includeCols - 数据处理列列名， 为list类型
+		excludeCols - 非数据处理列列名，为list类型
+		return - DataFrame类型
+	"""
+	df = dataapi.getFactorDailyData(td)
+	df = preprocessData(df, removeCols)
+	newdf = handleStandard(df, keyCols, includeCols, excludeCols)
+
+	return newdf
+
+def saveOneDay(filepath, td, df):
+	""" filepath - 保存文件的路径名，为str类型
+		td - 交易日，为datetime.date类型
+		df - pandas DataFrame对象
+	"""
+	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+	filename = td.strftime('%Y%m%d')
+	fullpath='{0}{1}.csv'.format(filepath, filename)
+	df.to_csv(fullpath, encoding='gbk')
+
+def handleAllDay(filepath, removeCols, keyCols, includeCols, excludeCols):
+	""" removeCols - 需要删掉的无用列列名，为list类型
+		keyCols - 关键列列名，为list类型
+		includeCols - 数据处理列列名， 为list类型
+		excludeCols - 非数据处理列列名，为list类型
+		return - DataFrame类型
+	"""
+	tddf = dataapi.getTradingDay()
+	tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
+	tradingDays = tddf['TradingDay'].tolist()
+	for td in tradingDays:
+		print 'handle {0}'.format(td.strftime('%Y%m%d'))
+		df = handleOneDay(td, removeCols, keyCols, includeCols, excludeCols)
+		saveOneDay(filepath, td, df)
+
 if __name__ == '__main__':
-	import dataapi
+	"""import dataapi
 	import datetime
+	filepath='D:/workspace/python/residual/result/'
 	td = datetime.date(2017, 3, 8)
 	df = dataapi.getFactorDailyData(td)
+	#删掉无用的列
+	df=df.drop(['FirstIndustryName', 'SecondIndustryName'], axis=1)
+	
+	#标准化处理
 	includeCols = dataapi.includeCols
 	excludeCols = dataapi.excludeCols
-
 	handleStandard(df, includeCols, excludeCols)
 	
-	filename = dt.strftime('%Y%m%d')
-	df.to_cvs(filename)
+	filename = td.strftime('%Y%m%d')
+	fullpath='{0}{1}'.format(filepath, filename)
+	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+	#df['FirstIndustryName'] = df['FirstIndustryName'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+	#df['SecondIndustryName'] = df['SecondIndustryName'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+	df.to_csv(fullpath, encoding='gbk')
+	"""
+	filepath='D:/workspace/python/residual/result/'
+	#标准化处理
+	removeCols = dataapi.removeCols
+	keyCols = dataapi.keyCols
+	includeCols = dataapi.includeCols
+	excludeCols = dataapi.excludeCols
+	handleAllDay(filepath,  removeCols, keyCols, includeCols, excludeCols)
