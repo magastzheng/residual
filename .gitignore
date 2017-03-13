@@ -1,6 +1,7 @@
 .DS_Store
 *~
 *.exe
+*.swo
 .*.swp
 *.log
 *.cvs
