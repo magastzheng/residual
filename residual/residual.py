@@ -132,10 +132,11 @@ def saveOneDay(filepath, td, df):
 		td - 交易日，为datetime.date类型
 		df - pandas DataFrame对象
 	"""
-	#df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
-	raise Exception
+	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.decode('gbk'))
+
 	filename = td.strftime('%Y%m%d')
 	fullpath='{0}{1}.csv'.format(filepath, filename)
+	#raise Exception
 	df.to_csv(fullpath, encoding='gbk')
 
 def calcResidual(filepath, td, df, keyCols, includeCols, excludeCols):
@@ -150,7 +151,7 @@ def calcResidual(filepath, td, df, keyCols, includeCols, excludeCols):
 	saveOneDay(filepath, td, newdf)
 	
 	end = datetime.datetime.now()
-	print 'cost: {0} on: {1}'.format(end-date, td.strftime('%Y%m%d'))
+	print 'cost: {0} on: {1}'.format(end-start, td.strftime('%Y%m%d'))
 
 def calcAllDay(residPath, stdPath, tradingDates, keyCols, includeCols, excludeCols):
 	"""	residPath - 保存残差数据的目录
