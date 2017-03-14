@@ -5,7 +5,8 @@ import sys
 import pandas as pd
 import numpy as np
 import datetime
-import statsmodels.formula.api as sm
+import statsmodels.formula.api as smf
+import statsmodels.api as sm
 import dataapi
 import os
 
@@ -18,14 +19,23 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 			return -  pandas Series对象表示的残差
 		"""
 		#TODO: 如果是流通市值，不需要再跟自己回归
-		allCols = list(newIndusColumns)
-		if column == nmmv:
-			pass
-		else:
-			allCols.insert(0, nmmv)
+		#allCols = list(newIndusColumns)
+		#if column == nmmv:
+		#	pass
+		#else:
+		#	allCols.insert(0, nmmv)
 		
 		df = df.fillna(0)
-		model = sm.OLS(df[column], df.loc[:,allCols])
+		
+		X = sm.add_constant(df[nmmv])
+		if column == nmmv:
+			#remove  column
+			X=X.drop([nmmv], axis=1)
+		
+		X = pd.concat([X[:], df[newIndusColumns]], axis=1)
+		Y = df[column]
+		#model = sm.OLS(df[column], df.loc[:,allCols])
+		model = smf.OLS(Y, X)
 		results = model.fit()
 		#raise Exception
 		#print results.summary()
