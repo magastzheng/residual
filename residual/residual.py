@@ -1,6 +1,7 @@
 #coding=utf-8
 #import sys
 #sys.path.append('D:/workspace/python/lib')
+import sys
 import pandas as pd
 import numpy as np
 import datetime
@@ -16,11 +17,14 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 			
 			return -  pandas Series对象表示的残差
 		"""
-		#TODO:
+		#TODO: 如果是流通市值，不需要再跟自己回归
 		allCols = list(newIndusColumns)
-		allCols.insert(0, nmmv)
+		if column == nmmv:
+			pass
+		else:
+			allCols.insert(0, nmmv)
+		
 		df = df.fillna(0)
-
 		model = sm.OLS(df[column], df.loc[:,allCols])
 		results = model.fit()
 		#raise Exception
@@ -173,6 +177,10 @@ def calcAllDay(residPath, stdPath, tradingDates, keyCols, includeCols, excludeCo
 		else:
 			print 'File {0} not found!'.format(csvpath)
 
+def calcMain(residPath, stdPath, tradingDates, start, end, keyCols, includeCols, excludeCols):
+	tds = [i for i in tradingDates if i >= start and i <= end]
+	calcAllDay(residPath, stdPath, tradingDays, keyCols, includeCols, excludeCols)
+
 if __name__ == '__main__':
 		"""#td = datetime.date(2017, 3, 8)
 		#df = dataapi.getFactorDailyData(td)
@@ -211,6 +219,17 @@ if __name__ == '__main__':
 
 		#calcResidual(df, includeCols, excludeCols)
 		"""
+
+		"""用法： python residual.py '20140101' '20141231'
+		"""
+		start = datetime.datetime.min
+		end = datetime.datetime.now()
+		params = sys.argv[1:]
+		if len(params) == 2:
+			start = datetime.datetime.strptime(params[0], '%Y%m%d')
+			end = datetime.datetime.strptime(params[1], '%Y%m%d')
+
+		print 'start {0}, end {1}'.format(start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
 		keyCols = dataapi.keyCols
 		includeCols = dataapi.includeCols
 		excludeCols = dataapi.excludeCols
@@ -219,4 +238,5 @@ if __name__ == '__main__':
 		tradingDays = tddf['TradingDay'].tolist()
 		stdPath = 'D:/workspace/python/residual/result/'
 		residPath = 'D:/workspace/python/residual/resid/'
-		calcAllDay(residPath, stdPath, tradingDays, keyCols, includeCols, excludeCols)
+		tds = [i for i in tradingDays if i >= start and i <= end]
+		calcAllDay(residPath, stdPath, tds, keyCols, includeCols, excludeCols)

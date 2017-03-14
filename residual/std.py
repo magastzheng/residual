@@ -1,5 +1,5 @@
 #coding=utf-8
-
+import sys
 import pandas
 import numpy as np
 import datetime
@@ -141,16 +141,13 @@ def saveOneDay(filepath, td, df):
 	fullpath='{0}{1}.csv'.format(filepath, filename)
 	df.to_csv(fullpath, encoding='gbk')
 
-def handleAllDay(filepath, removeCols, keyCols, includeCols, excludeCols):
+def handleAllDay(filepath, tradingDays, removeCols, keyCols, includeCols, excludeCols):
 	""" removeCols - 需要删掉的无用列列名，为list类型
 		keyCols - 关键列列名，为list类型
 		includeCols - 数据处理列列名， 为list类型
 		excludeCols - 非数据处理列列名，为list类型
 		return - DataFrame类型
 	"""
-	tddf = dataapi.getTradingDay()
-	tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
-	tradingDays = tddf['TradingDay'].tolist()
 	for td in tradingDays:
 		print 'handle {0}'.format(td.strftime('%Y%m%d'))
 		df = handleOneDay(td, removeCols, keyCols, includeCols, excludeCols)
@@ -177,10 +174,26 @@ if __name__ == '__main__':
 	#df['SecondIndustryName'] = df['SecondIndustryName'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
 	df.to_csv(fullpath, encoding='gbk')
 	"""
+
+	"""用法： python std.py '20140101' '20141231'
+	"""
+	start = datetime.datetime.min
+	end = datetime.datetime.now()
+	params = sys.argv[1:]
+	if len(params) == 2:
+		start = datetime.datetime.strptime(params[0], '%Y%m%d')
+		end = datetime.datetime.strptime(params[1], '%Y%m%d')
+	print 'start {0}, end {1}'.format(start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+
 	filepath='D:/workspace/python/residual/result/'
 	#标准化处理
 	removeCols = dataapi.removeCols
 	keyCols = dataapi.keyCols
 	includeCols = dataapi.includeCols
 	excludeCols = dataapi.excludeCols
-	handleAllDay(filepath,  removeCols, keyCols, includeCols, excludeCols)
+	tddf = dataapi.getTradingDay()
+	tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
+	tradingDays = tddf['TradingDay'].tolist()
+	tds = [i for i in tradingDays if i >= start and i <= end]
+
+	handleAllDay(filepath, tds, removeCols, keyCols, includeCols, excludeCols)
