@@ -35,25 +35,31 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 		elif column in includeCols:
 			print 'handle the column: {0}'.format(column)
 			#与中值绝对值列
-			nmabs = column+'_abs'
+			#nmabs = column+'_abs'
 			#对调整后使用中值调整后的列
-			nmadj = column+'_adj'
+			#nmadj = column+'_adj'
 			#行业内标准化后的列
-			nmstd = column+'_std'
-			df[nmabs] = np.nan
-			df[nmadj] = np.nan
-			df[nmstd] = np.nan
+			#nmstd = column+'_std'
+			#df[nmabs] = np.nan
+			#df[nmadj] = np.nan
+			#df[nmstd] = np.nan
 
 			newdf[column] = np.nan
 			start = datetime.datetime.now()
 			for industry in industries:
 				indusdata = df[df['IndustrySecuCode_I'] == industry]
+				induscoldata = indusdata[column]
 				#添加特殊逻辑，对某些列不做处理
-				stddata = getIndustryStandardData(df, column, nmabs, nmadj, nmstd, industry, 'IndustrySecuCode_I')
+				#t1 = datetime.datetime.now()
+				stddata = getIndustryStandardData(induscoldata, industry)
+				#t2 = datetime.datetime.now()
+				#print 'calc std data: {0}, cost: {1}'.format(industry, t2-t1)
 				#将数据更新到主表中
 				for idx in stddata.index:
 					#df.loc[idx, nmstd] = stddata[idx]
 					newdf.loc[idx, column] = stddata[idx]
+				#t3 = datetime.datetime.now()
+				#print 'assign std data: {0}, cost: {1}'.format(industry, t3-t2)
 
 			end = datetime.datetime.now()
 			print 'cost: {0}'.format(end-start)
@@ -63,37 +69,36 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 	return newdf
 
 #对某一行业某一列做标准化
-def getIndustryStandardData(df, column, nmabs, nmadj, nmstd, industryCode, industryColumn='IndustrySecuCode_I'):
-	"""	df - pandas DataFrame对象，存放每日因子数据
-		column - 因子名称，对应数据库的列名
-		nmabs - 列名，用于保存与中值差的绝对值
-		nmadj - 列名，用于对数据做调整后的值
-		nmstd - 列名，用于保存行业内标准化后的值
-		industryCode - 一级行业代码
-		industryColumn - 一级行业列名，用于对数据分组
-
+def getIndustryStandardData(induscoldata, industryCode):
+	"""	induscoldata - pandas Series 某行业某列数据
+		industryCode - 行业代码
 		return - 本列数据
 	"""
 	#获取本行业数据
-	indusdata = df[df[industryColumn] == industryCode]
-	#取指定列中值m
-	m = indusdata[column].median()
+	#取指定列中位数m和使用绝对值处理后的中位数l
+	#m和l只是用来确定下界lb和上界ub
+	#下界lb和上界ub用来对原始数据中的极值做处理
+	m = induscoldata.median()
 	#取与中值绝对值，并用于取另外一个中值l
-	indusdata[nmabs] = indusdata[column].astype(np.float).apply(lambda x: abs(x-m))
-	l = indusdata[nmabs].median()
-	#对值做处理
-	indusdata[nmadj] = indusdata[column].astype(np.float).apply(lambda x:getAdjustValue(x, l, m))
-	mean = indusdata[nmadj].mean()
-	std = indusdata[nmadj].std()
-	#print 'mean: {0}, std: {1}, indus: {2}'.format(mean, std, industryCode)
-	#标准化
-	indusdata[nmstd] = indusdata[nmadj].astype(np.float).apply(lambda x:getStandardValue(x, mean, std))
+	absdata = induscoldata.astype(np.float).apply(lambda x: abs(x-m))
+	l = absdata.median()
 	
-	return indusdata[nmstd]
+	#下界
+	lb = m-5.2*l
+	#上界
+	ub = m+5.2*l
 
-def getAdjustValue(x, l, m):
-		lb = m-5.2*l
-		ub = m+5.2*l
+	#对原始值做处理
+	adjdata = induscoldata.astype(np.float).apply(lambda x:getAdjustValue(x, lb, ub))
+	mean = adjdata.mean()
+	std = adjdata.std()
+	#对调整后的数据标准化
+	stddata = adjdata.astype(np.float).apply(lambda x:getStandardValue(x, mean, std))
+
+	#print 'Industry: {0}, m: {1}, l: {2}, mean: {3}, std: {4}'.format(industryCode, m, l, mean, std)
+	return stddata
+
+def getAdjustValue(x, lb, ub):
 		if x < lb:
 				return lb
 		elif x > ub:
@@ -154,27 +159,6 @@ def handleAllDay(filepath, tradingDays, removeCols, keyCols, includeCols, exclud
 		saveOneDay(filepath, td, df)
 
 if __name__ == '__main__':
-	"""import dataapi
-	import datetime
-	filepath='D:/workspace/python/residual/result/'
-	td = datetime.date(2017, 3, 8)
-	df = dataapi.getFactorDailyData(td)
-	#删掉无用的列
-	df=df.drop(['FirstIndustryName', 'SecondIndustryName'], axis=1)
-	
-	#标准化处理
-	includeCols = dataapi.includeCols
-	excludeCols = dataapi.excludeCols
-	handleStandard(df, includeCols, excludeCols)
-	
-	filename = td.strftime('%Y%m%d')
-	fullpath='{0}{1}'.format(filepath, filename)
-	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
-	#df['FirstIndustryName'] = df['FirstIndustryName'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
-	#df['SecondIndustryName'] = df['SecondIndustryName'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
-	df.to_csv(fullpath, encoding='gbk')
-	"""
-
 	"""用法： python std.py '20140101' '20141231'
 	"""
 	start = datetime.datetime.min
