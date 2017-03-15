@@ -39,3 +39,13 @@ def execute_query(conn, sql):
 		#for row in conn:
 		#	print row['c1']....
 
+def test():
+		conn = getConnection('localhost', 'zhenggq', 'Yuzhong0931', 'test')
+		sql = '''insert into account(Id, Name, Email, OpType, PassCode)
+				values(125, '我是谁', 'whoami@whoami.com', 1, 'Password')
+			  '''
+		#sql = '''insert into account(Id, Name, Email, OpType, PassCode)
+		#		values(125, 'Whoami', 'whoami@whoami.com', 1, 'Password')
+		#	'''
+		execute(conn, sql)
+		conn.close()
