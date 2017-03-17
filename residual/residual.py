@@ -8,7 +8,7 @@ import datetime
 import statsmodels.formula.api as smf
 import statsmodels.api as sm
 import dataapi
-import os
+import fileutil
 
 def calcOneFactor(df, newIndusColumns, column, nmmv):
 		"""	df - pandas DataFrame对象，为某天标准化后的因子数据
@@ -18,15 +18,9 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 			
 			return -  pandas Series对象表示的残差
 		"""
-		#TODO: 如果是流通市值，不需要再跟自己回归
-		#allCols = list(newIndusColumns)
-		#if column == nmmv:
-		#	pass
-		#else:
-		#	allCols.insert(0, nmmv)
 		
 		df = df.fillna(0)
-		
+		#如果是流通市值，不需要再跟自己回归	
 		X = sm.add_constant(df[nmmv])
 		if column == nmmv:
 			#remove  column
@@ -129,124 +123,109 @@ def getOneDayResid(df, newIndusColumns,  keyCols, includeCols, excludeCols):
 
 	for column in columns:
 		if column in includeCols:
-			print column
+			#print column
 			resid = calcOneFactor(df, newIndusColumns, column, 'NonRestrictedCap')
 			newdf[column] = np.nan
 			for idx in resid.index:
 					newdf.loc[idx, column] = resid[idx]
 		elif column in excludeCols:
-			print 'Skip: {0}'.format(column)
+			pass
+			#print 'Skip: {0}'.format(column)
 		else:
-			print 'Cannot support: {0}'.format(column)
+			pass
+			#print 'Cannot support: {0}'.format(column)
 	
 	return newdf
 
-def saveOneDay(filepath, td, df):
-	""" filepath - 保存文件的路径名，为str类型
-		td - 交易日，为datetime.date类型
-		df - pandas DataFrame对象
+def calcResidual(td, df, keyCols, includeCols, excludeCols):
+	"""	计算残差
+		td - 交易日
+		df - td那个交易日的标准化数据，pandas DataFrame对象
+		keyCols - 最终结果中必须出现的列名列表
+		includeCols - 必须计算残差的列名列表
+		excludeCols - 不需要计算残差的列名列表
 	"""
-	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.decode('gbk'))
-
-	filename = td.strftime('%Y%m%d')
-	fullpath='{0}{1}.csv'.format(filepath, filename)
-	#raise Exception
-	df.to_csv(fullpath, encoding='gbk')
-
-def calcResidual(filepath, td, df, keyCols, includeCols, excludeCols):
-	"""
-	"""
-	start = datetime.datetime.now()
 	
 	#去掉行业为空的行
 	df = df.dropna(subset=['IndustrySecuCode_I'])
 	newIndusColumns = preprocessData(df)
 	newdf = getOneDayResid(df, newIndusColumns, keyCols, includeCols, excludeCols)
-	saveOneDay(filepath, td, newdf)
 	
-	end = datetime.datetime.now()
-	print 'cost: {0} on: {1}'.format(end-start, td.strftime('%Y%m%d'))
+	return newdf
 
-def calcAllDay(residPath, stdPath, tradingDates, keyCols, includeCols, excludeCols):
+def calcAllDay(residPath, stdPath, tradingDates, keyCols, includeCols, excludeCols, createDate, settleDate):
 	"""	residPath - 保存残差数据的目录
 		stdPath - 保存标准化数据的目录
 		tradingDates - 交易日列表，内部数据为datetime.date类型
 		keyCols - 结果中必须包含的列，list类型
 		includeCols - 需要处理的列名，list类型
 		excludeCols - 不需要处理的列名，list类型
+		createDate - 开始时间列名
+		settleDate - 结束时间列名
+
 	"""
 	for td in tradingDates:
-		csvpath = '{0}{1}.csv'.format(stdPath, td.strftime('%Y%m%d'))
-		if os.path.exists(csvpath):
-			df=pd.read_csv(csvpath)
-			if not df.empty:
-				print td.strftime('%Y%m%d')
-				calcResidual(residPath, td, df, keyCols, includeCols, excludeCols)		
-			else:
-				pass
+		start = datetime.datetime.now()
+
+		df = fileutil.loadPickle(stdPath, td)
+		if df is not None:
+			actualKeyCols = list(keyCols)
+
+			if settleDate in df.columns:
+				actualKeyCols.insert(0, settleDate)
+			if createDate in df.columns:
+				actualKeyCols.insert(0, createDate)
+
+			newdf = calcResidual(td, df, actualKeyCols, includeCols, excludeCols)
+			fileutil.savePickle(residPath, td, newdf)
 		else:
-			print 'File {0} not found!'.format(csvpath)
+			print 'Fail to load data: {0}, {1}'.format(td.strftime('%Y%m%d'), stdPath)
+		
+		end = datetime.datetime.now()
+		print 'cost: {0} on: {1}'.format(end-start, td.strftime('%Y%m%d'))
 
 def calcMain(residPath, stdPath, tradingDates, start, end, keyCols, includeCols, excludeCols):
 	tds = [i for i in tradingDates if i >= start and i <= end]
-	calcAllDay(residPath, stdPath, tradingDays, keyCols, includeCols, excludeCols)
+	calcAllDay(residPath, stdPath, tradingDays, keyCols, includeCols, excludeCols, createDate, settleDate)
 
 if __name__ == '__main__':
-		"""#td = datetime.date(2017, 3, 8)
-		#df = dataapi.getFactorDailyData(td)
-		
-		#df = df.dropna(subset=['IndustrySecuCode_I'])
-
-		#取所有行业
-		#industries = getAllIndustries(df, 'IndustrySecuCode_I')
-
-		#生成新的行业列名
-		#newIndusColumns = getIndustryColumnName(industries)
-		
-		#添加新的列
-		#appendIndustryColumn(df, newIndusColumns)
-		
-		#updateIndustryData(df, newIndusColumns, industries, 'IndustrySecuCode_I')
-			
-		#columns = df.columns
-		
-		keyCols = dataapi.keyCols
-		includeCols = dataapi.includeCols
-		excludeCols = dataapi.excludeCols
-		newdf = df.loc[:, keyCols]
-		for column in columns:
-			if column in includeCols:
-				resid = calcOneFactor(df, newIndusColumns, column, 'NonRestrictedCap')
-				newdf[column] = np.nan
-				for idx in resid.index:
-						newdf.loc[idx, column] = resid[idx]
-			elif column in excludeCols:
-				print 'Skip: {0}'.format(column)
-			else:
-				print 'Cannot support: {0}'.format(column)
-
-
-
-		#calcResidual(df, includeCols, excludeCols)
+		"""用法： python residual.py 'd|w|m' '20140101' '20141231' ['stdPath' 'residPath']
 		"""
-
-		"""用法： python residual.py '20140101' '20141231'
-		"""
+		dtype = 'd'
 		start = datetime.datetime.min
 		end = datetime.datetime.now()
 		params = sys.argv[1:]
-		if len(params) == 2:
-			start = datetime.datetime.strptime(params[0], '%Y%m%d')
-			end = datetime.datetime.strptime(params[1], '%Y%m%d')
+		
+		stdPath = ''
+		residPath = ''
+		
+		if len(params) >= 1:
+			dtype = params[0]
+		if len(params) >= 3:
+			start = datetime.datetime.strptime(params[1], '%Y%m%d')
+			end = datetime.datetime.strptime(params[2], '%Y%m%d')
+		if len(params) >= 4:
+			stdPath = params[3]
+		if len(params) >= 5:
+			residPath = params[4]
 
-		print 'start {0}, end {1}'.format(start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+		if len(stdPath) == 0:
+			stdPath = 'D:/workspace/python/residual/result/'
+		if len(residPath) == 0:
+			residPath = 'D:/workspace/python/residual/resid/'
+
+		print 'dtype: {0}, start {1}, end {2}'.format(dtype, start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+		print 'stdPath: {0}'.format(stdPath)
+		print 'residPath: {0}'.format(residPath)
+
 		keyCols = dataapi.keyCols
 		includeCols = dataapi.includeCols
 		excludeCols = dataapi.excludeCols
-		tddf = dataapi.getTradingDay()
-		tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
-		tradingDays = tddf['TradingDay'].tolist()
-		stdPath = 'D:/workspace/python/residual/result/'
-		residPath = 'D:/workspace/python/residual/resid/'
+		createDate = dataapi.createDate
+		settleDate = dataapi.settleDate
+		#tddf = dataapi.getTradingDay()
+		#tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
+		#tradingDays = tddf['TradingDay'].tolist()
+		tradingDays = dataapi.getDayList(dtype)
 		tds = [i for i in tradingDays if i >= start and i <= end]
-		calcAllDay(residPath, stdPath, tds, keyCols, includeCols, excludeCols)
+		calcAllDay(residPath, stdPath, tds, keyCols, includeCols, excludeCols, createDate, settleDate)

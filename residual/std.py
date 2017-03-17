@@ -1,12 +1,14 @@
 #coding=utf-8
 import sys
-import pandas
+import pandas as pd
 import numpy as np
 import datetime
 import dataapi
+import fileutil
 
 def preprocessData(df, removeCols):
-	"""df - pandas DataFrame对象，包含一天的因子数据
+	"""	删掉不需要的行
+		df - pandas DataFrame对象，包含一天的因子数据
 		removeCols - 需要删掉的无用列名列表
 	"""
 	df1=df.drop(removeCols, axis=1)
@@ -22,47 +24,27 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 
 		return - pandas DataFrame对象，包含的标准化之后数据列名跟原来列名名称相同
 	"""
+	columns = df.columns
 	#生成数据对象，用来存放标准化之后数据
 	newdf = df.loc[:, keyCols]
 	industries = df['IndustrySecuCode_I'].dropna().unique()
-	columns = df.columns
-	#print columns
+	
 	for column in columns:
-		#print column
 		if column in excludeCols:
 			print 'skip the column: {0}'.format(column)
 			continue
 		elif column in includeCols:
-			print 'handle the column: {0}'.format(column)
-			#与中值绝对值列
-			#nmabs = column+'_abs'
-			#对调整后使用中值调整后的列
-			#nmadj = column+'_adj'
-			#行业内标准化后的列
-			#nmstd = column+'_std'
-			#df[nmabs] = np.nan
-			#df[nmadj] = np.nan
-			#df[nmstd] = np.nan
-
+			#print 'handle the column: {0}'.format(column)
 			newdf[column] = np.nan
-			start = datetime.datetime.now()
 			for industry in industries:
 				indusdata = df[df['IndustrySecuCode_I'] == industry]
 				induscoldata = indusdata[column]
 				#添加特殊逻辑，对某些列不做处理
-				#t1 = datetime.datetime.now()
 				stddata = getIndustryStandardData(induscoldata, industry)
-				#t2 = datetime.datetime.now()
-				#print 'calc std data: {0}, cost: {1}'.format(industry, t2-t1)
 				#将数据更新到主表中
 				for idx in stddata.index:
-					#df.loc[idx, nmstd] = stddata[idx]
 					newdf.loc[idx, column] = stddata[idx]
-				#t3 = datetime.datetime.now()
-				#print 'assign std data: {0}, cost: {1}'.format(industry, t3-t2)
 
-			end = datetime.datetime.now()
-			print 'cost: {0}'.format(end-start)
 		else:
 				print 'Cannot support: {0}'.format(column)
 		
@@ -122,62 +104,82 @@ def isZero(x):
 		"""
 		return abs(x) < 0.000000001
 
-def handleOneDay(td, removeCols, keyCols, includeCols, excludeCols):
+def handleOneDay(df, removeCols, keyCols, includeCols, excludeCols):
 	""" td - 交易日为datetime.date类型
 		removeCols - 需要删掉的无用列列名，为list类型
 		keyCols - 关键列列名，为list类型
 		includeCols - 数据处理列列名， 为list类型
 		excludeCols - 非数据处理列列名，为list类型
+
 		return - DataFrame类型
 	"""
-	df = dataapi.getFactorDailyData(td)
+
 	df = preprocessData(df, removeCols)
 	newdf = handleStandard(df, keyCols, includeCols, excludeCols)
 
 	return newdf
 
-def saveOneDay(filepath, td, df):
-	""" filepath - 保存文件的路径名，为str类型
-		td - 交易日，为datetime.date类型
-		df - pandas DataFrame对象
-	"""
-	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
-	filename = td.strftime('%Y%m%d')
-	fullpath='{0}{1}.csv'.format(filepath, filename)
-	df.to_csv(fullpath, encoding='gbk')
-
-def handleAllDay(filepath, tradingDays, removeCols, keyCols, includeCols, excludeCols):
-	""" removeCols - 需要删掉的无用列列名，为list类型
+def handleAllDay(filepath, tradingDays, dtype, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate):
+	""" filepath - 文件输出目录
+		tradingDays - 交易日列表
+		dtype - 字符类型表示交易日的类型，每日/周/月
+		removeCols - 需要删掉的无用列列名，为list类型
 		keyCols - 关键列列名，为list类型
 		includeCols - 数据处理列列名， 为list类型
 		excludeCols - 非数据处理列列名，为list类型
+		createDate - 开始时间列名
+		settleDate - 结束时间列名
+
 		return - DataFrame类型
 	"""
 	for td in tradingDays:
 		print 'handle {0}'.format(td.strftime('%Y%m%d'))
-		df = handleOneDay(td, removeCols, keyCols, includeCols, excludeCols)
-		saveOneDay(filepath, td, df)
+		#df = dataapi.getFactorDailyData(td)
+		df = dataapi.getFactorData(dtype, td)
+		actualKeyCols = list(keyCols)
+		if settleDate in df.columns:
+			actualKeyCols.insert(0, settleDate)
+		if createDate in df.columns:
+			actualKeyCols.insert(0, createDate)
+		
+		newdf = handleOneDay(df, removeCols, actualKeyCols, includeCols, excludeCols)
+		fileutil.savePickle(filepath, td, newdf)
 
 if __name__ == '__main__':
-	"""用法： python std.py '20140101' '20141231'
+	"""用法： python std.py 'd|w|m' '20140101' '20141231' ['filepath']
 	"""
+	dtype = 'd'
 	start = datetime.datetime.min
 	end = datetime.datetime.now()
-	params = sys.argv[1:]
-	if len(params) == 2:
-		start = datetime.datetime.strptime(params[0], '%Y%m%d')
-		end = datetime.datetime.strptime(params[1], '%Y%m%d')
-	print 'start {0}, end {1}'.format(start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+	filepath = ''
 
-	filepath='D:/workspace/python/residual/result/'
+	params = sys.argv[1:]
+	
+	if len(params) >= 1:
+		dtype = params[0]
+	if len(params) >= 3:
+		start = datetime.datetime.strptime(params[1], '%Y%m%d')
+		end = datetime.datetime.strptime(params[2], '%Y%m%d')
+	if len(params) >= 4:
+		filepath=params[3]
+	
+	if len(filepath) == 0:
+		filepath='D:/workspace/python/residual/result/'
+	
+	print 'dtype: {0}, start {1}, end {2}, result path: {3}'.format(dtype, start.strftime('%Y%m%d'), end.strftime('%Y%m%d'), filepath)
+
 	#标准化处理
 	removeCols = dataapi.removeCols
 	keyCols = dataapi.keyCols
 	includeCols = dataapi.includeCols
 	excludeCols = dataapi.excludeCols
-	tddf = dataapi.getTradingDay()
-	tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
-	tradingDays = tddf['TradingDay'].tolist()
+	createDate = dataapi.createDate
+	settleDate = dataapi.settleDate
+	#tddf = dataapi.getTradingDay()
+	#tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
+	#tradingDays = tddf['TradingDay'].tolist()
+	
+	tradingDays = dataapi.getDayList(dtype)
 	tds = [i for i in tradingDays if i >= start and i <= end]
-
-	handleAllDay(filepath, tds, removeCols, keyCols, includeCols, excludeCols)
+	
+	handleAllDay(filepath, tds, dtype, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate)

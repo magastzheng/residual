@@ -11,6 +11,8 @@ import dataapi
 import os
 import pdb
 
+indusColumns=['Indus_1','Indus_2','Indus_3','Indus_4','Indus_5','Indus_6','Indus_7','Indus_8','Indus_9','Indus_10','Indus_11','Indus_12','Indus_13','Indus_14','Indus_15','Indus_16','Indus_17','Indus_18','Indus_19','Indus_20','Indus_21','Indus_22','Indus_23','Indus_24','Indus_25','Indus_26','Indus_27','Indus_28','Indus_29']
+
 def calcOneFactor(df, newIndusColumns, column, nmmv):
 		"""	df - pandas DataFrame对象，为某天标准化后的因子数据
 			newIndusColumns - 行业因子名称列表
@@ -164,18 +166,30 @@ def test():
 	td = datetime.date(2017, 3, 8)
 	stdPath = 'D:/workspace/python/residual/result/'
 	residPath = 'D:/workspace/python/residual/residtest/'
-	csvpath = '{0}{1}.csv'.format(stdPath, td.strftime('%Y%m%d'))
+	#csvpath = '{0}{1}.csv'.format(stdPath, td.strftime('%Y%m%d'))
+	csvpath = '{0}{1}.csv'.format(stdPath, '20170308-r')
 	keyCols = dataapi.keyCols
 	includeCols = dataapi.includeCols
 	excludeCols = dataapi.excludeCols
+	newIndusColumns = indusColumns
 	if os.path.exists(csvpath):
 		df=pd.read_csv(csvpath)
 		#去掉行业为空的行
 		df = df.dropna(subset=['IndustrySecuCode_I'])
-		newIndusColumns = preprocessData(df)
+		#newIndusColumns = preprocessData(df)
 		newdf = getOneDayResid(df, newIndusColumns, keyCols, includeCols, excludeCols)
 	else:
 		pass
+
+def load(dtstr):
+	residPath = 'D:/workspace/python/residual/resid/'
+	csvpath = '{0}{1}.csv'.format(residPath, dtstr)
+	if os.path.exists(csvpath):
+			df=pd.read_csv(csvpath)
+			return df
+	else:
+			print('The file {0} is not found!'.format(csvpath))
+			return None
 
 if __name__ == '__main__':
 		"""用法： python residual.py '20140101' '20141231'

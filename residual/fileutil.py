@@ -1,5 +1,7 @@
 #coding=utf8
 import os
+import pandas as pd
+import datetime
 
 def readFile(fileName):
 	"""按文本方式读取文件，并返回所有文本内容
@@ -28,3 +30,55 @@ def writeFile(fileName, text):
 			fileObj.write(text)
 	finally:
 			fileObj.close()
+
+def saveCSV(filepath, td, df):
+	""" 保存成csv格式
+		filepath - 保存文件的路径名，为str类型
+		td - 交易日，为datetime.date类型
+		df - pandas DataFrame对象
+	"""
+	#df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+	#df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.decode('gbk'))
+	filename = td.strftime('%Y%m%d')
+	fullpath='{0}{1}.csv'.format(filepath, filename)
+	df.to_csv(fullpath, encoding='gbk')
+
+def loadCSV(filepath, td):
+	"""	从csv格式文件中读入到pandas DataFrame
+		filepath - 保存文件的路径名，为str类型
+		td - 交易日，为datetime.date类型
+	"""
+	filename = td.strftime('%Y%m%d')
+	fullpath='{0}{1}.csv'.format(filepath, filename)
+	df = None
+	if os.path.exists(fullpath):
+		df = pd.read_csv(fullpath)
+	else:
+		print 'Cannot open file: {0}'.format(fullpath)
+
+	return df
+
+def savePickle(filepath, td, df):
+	"""	保存成pickle格式
+		filepath - 保存文件的路径名，为str类型
+		td - 交易日，为datetime.date类型
+		df - pandas DataFrame对象
+	"""
+	filename = td.strftime('%Y%m%d')
+	fullpath='{0}{1}.pkl'.format(filepath, filename)
+	df.to_pickle(fullpath)
+
+def loadPickle(filepath, td):
+	"""	从pickle格式文件中读入到pandas DataFrame
+		filepath - 保存文件的路径名，为str类型
+		td - 交易日，为datetime.date类型
+	"""
+	filename = td.strftime('%Y%m%d')
+	fullpath='{0}{1}.pkl'.format(filepath, filename)
+	df = None
+	if os.path.exists(fullpath):
+		df = pd.read_pickle(fullpath)
+	else:
+		print 'Cannot open file: {0}'.format(fullpath)
+
+	return df
