@@ -5,6 +5,7 @@
 .*.swp
 *.log
 *.csv
+*.pkl
 *.pyc
 bin/
 pkg/
