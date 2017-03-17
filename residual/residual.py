@@ -147,8 +147,11 @@ def calcResidual(td, df, keyCols, includeCols, excludeCols):
 	"""
 	
 	#去掉行业为空的行
+	print 'preprocess'
 	df = df.dropna(subset=['IndustrySecuCode_I'])
 	newIndusColumns = preprocessData(df)
+	
+	print 'calculate ....'
 	newdf = getOneDayResid(df, newIndusColumns, keyCols, includeCols, excludeCols)
 	
 	return newdf
@@ -166,9 +169,10 @@ def calcAllDay(residPath, stdPath, tradingDates, keyCols, includeCols, excludeCo
 	"""
 	for td in tradingDates:
 		start = datetime.datetime.now()
-
+		
 		df = fileutil.loadPickle(stdPath, td)
 		if df is not None:
+			print 'process: {0}'.format(td.strftime('%Y%m%d'))
 			actualKeyCols = list(keyCols)
 
 			if settleDate in df.columns:
