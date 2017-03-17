@@ -411,7 +411,10 @@ def insertAllData(filepath, tradingDays, dtype):
 		start = datetime.datetime.now()
 
 		df = fileutil.loadPickle(filepath, td)
-		insertData(dtype, engine, df)
+		if df is not None:
+			#中文被错误处理成unicode编码，而实际上是gbk编码
+			df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+			insertData(dtype, engine, df)
 		
 		end = datetime.datetime.now()
 		print 'Cost: {0}'.format(end-start)
