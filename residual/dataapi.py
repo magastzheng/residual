@@ -1,4 +1,4 @@
-#coding=utf-8
+﻿#coding=utf-8
 
 import dbaccessor
 import pandas
@@ -13,9 +13,10 @@ excludeCols = ['TradingDay', 'SecuCode', 'SecuAbbr', 'IndustrySecuCode_I', 'Firs
 includeCols = ['ClosePrice','OpenPrice','HighPrice','LowPrice','ExeClosePrice','ExeOpenPrice','ExeHighPrice','ExeLowPrice','NonRestrictedShares','AFloats','TotalShares','TurnoverVolume','NonRestrictedCap','AFloatsCap','TotalCap','PE','PB','PS','PCF','DividendYield','DividendRatio','TTMIncome','GP_Margin','NP_Margin','ROA','ROE','AssetsTurnover','EquityTurnover','Cash_to_Assets','Liability_to_Assets','EquityMultiplier','CurrentRatio','Income_Growth_YOY_Comparable','NPPC_Growth_YOY_Comparable','GP_Margin_Comparable','GP_Margin_Growth_YOY_Comparable','NP_Margin_Comparable','NP_Margin_Growth_YOY_Comparable','Income_Growth_Pre_Comparable','NPPC_Growth_Pre_Comparable','GP_Margin_Growth_Pre_Comparable','NP_Margin_Growth_Pre_Comparable','NPPC_Growth_Pre_Season','NPPC_Growth_YOY_Season','NPLNRP_Growth_Pre_Season','NPLNRP_Growth_YOY_Season','Income_Growth_Pre_Season','Income_Growth_YOY_Season','Income_Growth_Qtr_Comparable','NPPC_Growth_Qtr_Comparable','GP_Margin_Qtr','GP_Margin_Growth_Qtr_Comparable','IPS_Qtr','EPS_Qtr','ROE_Qtr','Income_Growth_Pre','NPPC_Growth_Pre','NPLNRP_Growth_Pre','GP_Margin_Growth_Pre','NP_Margin_Growth_Pre','Income_Growth_YOY','NPPC_Growth_YOY','NPLNRP_Growth_YOY','GP_Margin_Growth_YOY','NP_Margin_Growth_YOY','IPS','EPS','CFPS','Pre_IPS','Pre_EPS','Pre_CFPS','YOY_IPS','YOY_EPS','YOY_CFPS','rPE','rPB','rPS','rPCF','SettlePrice','ExecutivesProp','InstitutionNum','InstitutionProp','RegionScore','ExeClosePrice_CreateDate_Wind','ExeClosePrice_SettleDate_Wind','Momentum20Day','Momentum40Day','Momentum60Day','Momentum120Day','Momentum180Day','Momentum240Day','PriceDiff','DayDiff','TurnoverRatio','AvgTurnoverPrice','AvgTurnoverPriceFactor','AvgTurnoverRatio5Day','AvgTurnoverRatio10Day','AvgTurnoverRatio20Day','AvgTurnoverRatio40Day','AvgTurnoverRatio60Day','AvgTurnoverRatio120Day', 'E_EPS', 'E_growth', 'FreeFloat_Total', 'EPS_CFPS']
 
 def getengine():
-		host = '176.1.11.55'
+		#host = '176.1.11.55'
+		host = 'localhost'
 		user = 'zhenggq'
-		password = 'Yuzhong0931'
+		password = 'yuzhong'
 		return dbaccessor.getdb(host, user, password)
 
 def getFactorDailyAllData():
@@ -27,12 +28,17 @@ def getFactorDailyAllData():
 		return df
 
 def getTradingDay():
-		sql = '''select 
+		"""sql = '''select 
 					*
 				from zhenggq.dbo.tradingdate
 				order by TradingDay desc
 			'''
-
+                """
+                sql = '''select distinct convert(varchar, TradingDay, 112) as TradingDay
+                        from advancedb.dbo.FactorDaily_Comparable
+                        where TradingDay is not null
+                        order by TradingDay desc
+                      '''
 		engine = getengine()
 		df = dbaccessor.query(engine, sql)
 		return df

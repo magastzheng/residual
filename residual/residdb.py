@@ -148,6 +148,10 @@ def insertDaily(conn, df):
 					Column('AvgTurnoverRatio40Day', Numeric(20, 5)),
 					Column('AvgTurnoverRatio60Day', Numeric(20, 5)),
 					Column('AvgTurnoverRatio120Day', Numeric(20, 5)),
+                                        Column('E_EPS', Numeric(16, 4)),
+					Column('E_growth', Numeric(16, 4)),
+					Column('FreeFloat_Total', Numeric(16, 4)),
+					Column('EPS_CFPS', Numeric(32, 21)),
 					)
 
 	insert(conn, residtb, df)
@@ -177,7 +181,10 @@ def insertWeekly(conn, df):
 					Column('SecuAbbr', String(50)),
 					Column('IndustrySecuCode_I', String(10)),
 					Column('PE', Numeric(38, 6)),
-					Column('PB', Numeric(38, 6)),
+					Column('PB', Numeric(38, 6)),Column('E_EPS', Numeric(16, 4)),
+					Column('E_growth', Numeric(16, 4)),
+					Column('FreeFloat_Total', Numeric(16, 4)),
+					Column('EPS_CFPS', Numeric(32, 21)),
 					Column('PS', Numeric(38, 6)),
 					Column('PCF', Numeric(38, 6)),
 					Column('DividendYield', Numeric(16, 6)),
@@ -266,6 +273,10 @@ def insertWeekly(conn, df):
 					Column('AvgTurnoverRatio40Day', Numeric(20, 5)),
 					Column('AvgTurnoverRatio60Day', Numeric(20, 5)),
 					Column('AvgTurnoverRatio120Day', Numeric(20, 5)),
+                                        Column('E_EPS', Numeric(16, 4)),
+					Column('E_growth', Numeric(16, 4)),
+					Column('FreeFloat_Total', Numeric(16, 4)),
+					Column('EPS_CFPS', Numeric(32, 21)),
 					)
 
 	insert(conn, residtb, df)
@@ -274,7 +285,7 @@ def insertMonthly(conn, df):
 	"""	插入每月因子残差数据表
 	"""
 	metadata = MetaData()
-	residtb = Table('FactoMonthlyResidual', metadata,
+	residtb = Table('FactorMonthlyResidual', metadata,
 					Column('TradingDay', DateTime(), nullable=False),
 					Column('SecuCode', String(10), nullable=False),
 					Column('ClosePrice', Numeric(16, 4)),
@@ -384,6 +395,10 @@ def insertMonthly(conn, df):
 					Column('AvgTurnoverRatio40Day', Numeric(20, 5)),
 					Column('AvgTurnoverRatio60Day', Numeric(20, 5)),
 					Column('AvgTurnoverRatio120Day', Numeric(20, 5)),
+                                        Column('E_EPS', Numeric(16, 4)),
+					Column('E_growth', Numeric(16, 4)),
+					Column('FreeFloat_Total', Numeric(16, 4)),
+					Column('EPS_CFPS', Numeric(32, 21)),
 					)
 
 	insert(conn, residtb, df)
@@ -405,8 +420,10 @@ def insertData(dtype, engine, df):
 			print 'Cannot support the dtype: {0}'.format(dtype)
 
 def insertAllData(filepath, tradingDays, dtype):
-	engine = dbaccessor.getdb('176.1.11.55', 'zhenggq', 'Yuzhong0931', 'advancedb', 1433)
-	for td in tradingDays:
+	#engine = dbaccessor.getdb('176.1.11.55', 'zhenggq', 'Yuzhong0931', 'advancedb', 1433)
+	engine = dbaccessor.getdb('localhost', 'zhenggq', 'yuzhong', 'advancedb', 1433)
+	
+        for td in tradingDays:
 		print 'insert: {0}'.format(td.strftime('%Y%m%d'))
 		start = datetime.datetime.now()
 
