@@ -7,5 +7,7 @@
 *.csv
 *.pkl
 *.pyc
+*.xls
+*.xlsx
 bin/
 pkg/
