@@ -420,8 +420,8 @@ def insertData(dtype, engine, df):
 			print 'Cannot support the dtype: {0}'.format(dtype)
 
 def insertAllData(filepath, tradingDays, dtype):
-	#engine = dbaccessor.getdb('176.1.11.55', 'zhenggq', 'Yuzhong0931', 'advancedb', 1433)
-	engine = dbaccessor.getdb('localhost', 'zhenggq', 'yuzhong', 'advancedb', 1433)
+	engine = dbaccessor.getdb('176.1.11.55', 'zhenggq', 'Yuzhong0931', 'advancedb', 1433)
+	#engine = dbaccessor.getdb('localhost', 'zhenggq', 'yuzhong', 'advancedb', 1433)
 	
         for td in tradingDays:
 		print 'insert: {0}'.format(td.strftime('%Y%m%d'))
