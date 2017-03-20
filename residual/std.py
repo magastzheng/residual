@@ -38,7 +38,9 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 			newdf[column] = np.nan
 			for industry in industries:
 				indusdata = df[df['IndustrySecuCode_I'] == industry]
-				induscoldata = indusdata[column]
+				#获取当前列数据并去掉空值
+				induscoldata = indusdata[column].dropna()
+
 				#添加特殊逻辑，对某些列不做处理
 				stddata = getIndustryStandardData(induscoldata, industry)
 				#将数据更新到主表中

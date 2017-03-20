@@ -18,8 +18,8 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 			
 			return -  pandas Series对象表示的残差
 		"""
-		
-		df = df.fillna(0)
+		#去掉空值
+		df = df[df[column].isnull() == False]
 		#如果是流通市值，不需要再跟自己回归	
 		X = sm.add_constant(df[nmmv])
 		if column == nmmv:
