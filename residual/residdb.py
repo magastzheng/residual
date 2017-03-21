@@ -15,8 +15,9 @@ from sqlalchemy import (
 				ForeignKey
 				)
 import dbaccessor
-import pandas
+import pandas as pd
 import datetime
+import numpy as np
 
 import dataapi
 import fileutil
@@ -29,8 +30,11 @@ def insert(conn, tb, df):
 	"""
 	#TODO: verify the result
 	ins = tb.insert()
+	#df = df.replace(np.nan, None)
+	df = df.where((pd.notnull(df)), None)
 	dataList = df.T.to_dict().values()
 	try:
+		#print ins
 		result = conn.execute(ins, dataList)
 	finally:
 		conn.close()
@@ -436,7 +440,7 @@ def insertAllData(filepath, tradingDays, dtype):
 			insertData(dtype, engine, df)
 		
 		end = datetime.datetime.now()
-		print 'Cost: {0}'.format(end-start)
+		print 'Cost: {0} on {1}'.format(end-start, td.strftime('%Y%m%d'))
 
 if __name__ == '__main__':
 	"""用法： python residdb.py 'd|w|m' '20140101' '20141231' ['filepath']

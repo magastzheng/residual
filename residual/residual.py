@@ -20,6 +20,9 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 		"""
 		#去掉空值
 		df = df[df[column].isnull() == False]
+		if df is None or len(df) == 0:
+			return None
+
 		#如果是流通市值，不需要再跟自己回归	
 		X = sm.add_constant(df[nmmv])
 		if column == nmmv:
@@ -40,8 +43,12 @@ def appendIndustryColumn(df, industryColumns):
 			df - pandas DataFrame对象，为某天因子数据
 			industryColumns - 字符串列表，存放新行业列名
 		"""
+		print 'appendIndustryColumn start....'
 		for industryColumn in industryColumns:
-				df.loc[:, industryColumn]=0
+			#df.loc[:, industryColumn]=0
+			df[industryColumn] = 0
+			
+		print 'appendIndustryColumn end....'
 
 		return df
 
@@ -51,6 +58,7 @@ def updateIndustryData(df, newIndusColumns, industryCodes, industryColumn='Indus
 			industryCodes - 一级行业代码列表
 			industryColumn - 一级行业数据库表列名
 		"""
+		print 'updateIndustryData start....'
 		for industryCode in industryCodes:
 			idx = -1
 			if industryCode in industryCodes:
@@ -59,6 +67,8 @@ def updateIndustryData(df, newIndusColumns, industryCodes, industryColumn='Indus
 				newIndusColumn = newIndusColumns[idx]
 				df.loc[df[industryColumn] == industryCode, newIndusColumn] = 1
 		
+		print 'updateIndustryData start....'
+
 		return df
 
 def getAllIndustries(df, industryColumn):
@@ -124,9 +134,10 @@ def getOneDayResid(df, newIndusColumns,  keyCols, includeCols, excludeCols):
 	for column in columns:
 		if column in includeCols:
 			#print column
-			resid = calcOneFactor(df, newIndusColumns, column, 'NonRestrictedCap')
 			newdf[column] = np.nan
-			for idx in resid.index:
+			resid = calcOneFactor(df, newIndusColumns, column, 'NonRestrictedCap')
+			if resid is not None and len(resid) > 0:
+				for idx in resid.index:
 					newdf.loc[idx, column] = resid[idx]
 		elif column in excludeCols:
 			pass

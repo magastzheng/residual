@@ -136,6 +136,7 @@ def handleAllDay(filepath, tradingDays, dtype, removeCols, keyCols, includeCols,
 	"""
 	for td in tradingDays:
 		print 'handle {0}'.format(td.strftime('%Y%m%d'))
+		start = datetime.datetime.now()
 		#df = dataapi.getFactorDailyData(td)
 		df = dataapi.getFactorData(dtype, td)
 		actualKeyCols = list(keyCols)
@@ -146,6 +147,9 @@ def handleAllDay(filepath, tradingDays, dtype, removeCols, keyCols, includeCols,
 		
 		newdf = handleOneDay(df, removeCols, actualKeyCols, includeCols, excludeCols)
 		fileutil.savePickle(filepath, td, newdf)
+		
+		end = datetime.datetime.now()
+		print 'Cost: {0} on: {1}'.format(end - start, td.strftime('%Y%m%d'))
 
 if __name__ == '__main__':
 	"""用法： python std.py 'd|w|m' '20140101' '20141231' ['filepath']
