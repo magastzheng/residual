@@ -38,8 +38,12 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 			newdf[column] = np.nan
 			for industry in industries:
 				indusdata = df[df['IndustrySecuCode_I'] == industry]
-				#获取当前列数据并去掉空值
-				induscoldata = indusdata[column].dropna()
+				
+				#获取当前列值不为空值和无效值10000的行
+				validrowdata = indusdata[pd.notnull(df[column]) & (df[column] != 10000)]
+				
+				#获取当前列数据
+				induscoldata = validrowdata[column]
 
 				#添加特殊逻辑，对某些列不做处理
 				stddata = getIndustryStandardData(induscoldata, industry)
