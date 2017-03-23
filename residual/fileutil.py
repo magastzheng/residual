@@ -37,7 +37,7 @@ def saveCSV(filepath, td, df):
 		td - 交易日，为datetime.date类型
 		df - pandas DataFrame对象
 	"""
-	#df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
+	df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.encode('raw-unicode-escape').decode('gbk'))
 	#df['SecuAbbr'] = df['SecuAbbr'].apply(lambda x:x.decode('gbk'))
 	filename = td.strftime('%Y%m%d')
 	fullpath='{0}{1}.csv'.format(filepath, filename)

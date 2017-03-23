@@ -442,6 +442,55 @@ def insertAllData(filepath, tradingDays, dtype):
 		end = datetime.datetime.now()
 		print 'Cost: {0} on {1}'.format(end-start, td.strftime('%Y%m%d'))
 
+
+def insertWeeklyClosePrice(conn, df):
+	"""	插入每周因子残差数据表
+	"""
+	metadata = MetaData()
+	residtb = Table('FactorTradingDayResidual_ClosePrice', metadata,
+					Column('createDate', Float()),
+					Column('settleDate', Float()),
+					Column('TradingDay', DateTime(), nullable=False),
+					Column('SecuCode', String(10), nullable=False),
+					Column('NonRestrictedCap', Float()),
+					Column('IndustrySecuCode_I', String(10)),
+					Column('ClosePrice_CreateDate_Wind', Float()),
+					Column('ClosePrice_SettleDate_Wind', Float()),
+					)
+
+	insert(conn, residtb, df)
+
+def insertMonthlyClosePrice(conn, df):
+	"""	插入每周因子残差数据表
+	"""
+	metadata = MetaData()
+	residtb = Table('FactorMonthlyResidual_ClosePrice', metadata,
+					Column('createDate', Float()),
+					Column('settleDate', Float()),
+					Column('TradingDay', DateTime(), nullable=False),
+					Column('SecuCode', String(10), nullable=False),
+					Column('NonRestrictedCap', Float()),
+					Column('IndustrySecuCode_I', String(10)),
+					Column('ClosePrice_CreateDate_Wind', Float()),
+					Column('ClosePrice_SettleDate_Wind', Float()),
+					)
+
+	insert(conn, residtb, df)
+
+def insertDataClosePrice(dtype, engine, df):
+	"""	根据类型插入到不同的表
+		dtype - 字符类型表示交易日的类型，每日/周/月
+		engine - sqlalchemy数据库引擎
+		df - pandas DataFrame对象
+	"""
+	conn = engine.connect()
+	if dtype == 'w':
+			insertWeeklyClosePrice(conn, df)
+	elif dtype == 'm':
+			insertMonthlyClosePrice(conn, df)
+	else:
+			print 'Cannot support the dtype: {0}'.format(dtype)
+
 if __name__ == '__main__':
 	"""用法： python residdb.py 'd|w|m' '20140101' '20141231' ['filepath']
 	"""

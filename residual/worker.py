@@ -1,6 +1,7 @@
 #coding=utf8
 
-import datatime
+import sys
+import datetime
 import dataapi
 import std
 import residual
@@ -33,30 +34,34 @@ def handleOneDay(stdpath, residpath, dtype, td, removeCols, keyCols, includCols,
 	fileutil.savePickle(residpath, td, residdf)
 
 	engine = dbaccessor.getdb('localhost', 'zhenggq', 'Yuzhong0931', 'advancedb', 1433)
-	residdb.insertData(dtype, engine, residdf)
-	
-	t3 = datetime.datetime.now()
+	#residdb.insertData(dtype, engine, residdf)
+	residdb.insertDataClosePrice(dtype, engine, residdf)
+
+	t4 = datetime.datetime.now()
 	print 'Cost insertdb: {0} on {1}'.format(t4-t3, td.strftime('%Y%m%d'))
 
 def handleAllDay(stdpath, residpath, dtype, tds, removeCols, keyCols, includCols, excludeCols, createDate, settleDate):
-	for td in tradingDays:
+	for td in tds:
 		handleOneDay(stdpath, residpath, dtype, td, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate)
 
 defstdpath={
-'d': 'D:/workspace/python/residual/result/daily/'
-'w': 'D:/workspace/python/residual/result/weekly/'
-'m': 'D:/workspace/python/residual/result/monthly/'
+	'd': 'D:/workspace/python/residual/result/daily/',
+	'w': 'D:/workspace/python/residual/result/weekly/',
+	'm': 'D:/workspace/python/residual/result/monthly/',
 }
 
 defresidpath={
-'d': 'D:/workspace/python/residual/resid/daily/'
-'w': 'D:/workspace/python/residual/resid/weekly/'
-'m': 'D:/workspace/python/residual/resid/monthly/'
+	'd': 'D:/workspace/python/residual/resid/daily/',
+	'w': 'D:/workspace/python/residual/resid/weekly/',
+	'm': 'D:/workspace/python/residual/resid/monthly/',
 }
 
 if __name__ == '__main__':
+	"""用法： python worker.py 'w|m' '20140101' '20141231' ['stdpath'] ['residpath']
+	"""
+		
 	dtype = 'd'
-	start = datetime.datetime.min
+	start = datetime.datetime(2000, 1, 1)
 	end = datetime.datetime.now()
 	stdpath = ''
 	residpath = ''
@@ -81,11 +86,13 @@ if __name__ == '__main__':
 	
 	removeCols = dataapi.removeCols
 	keyCols = dataapi.keyCols
-	includeCols = dataapi.includeCols
+	includeCols = ['NonRestrictedCap', 'ClosePrice_CreateDate_Wind', 'ClosePrice_SettleDate_Wind']
 	excludeCols = dataapi.excludeCols
 	createDate = dataapi.createDate
 	settleDate = dataapi.settleDate
+	
+	print 'start: {0}, end: {1}'.format(start, end)
 
 	tradingDays = dataapi.getDayList(dtype)
 	tds = [i for i in tradingDays if i >= start and i <= end]
-	handleAllDay(stdpath, residpath, dtype, tds, removeClose, keyCols, includeCols, excludeCols, createDate, settleDate)
+	handleAllDay(stdpath, residpath, dtype, tds, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate)
