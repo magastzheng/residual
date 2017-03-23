@@ -34,8 +34,8 @@ def handleOneDay(stdpath, residpath, dtype, td, removeCols, keyCols, includCols,
 	fileutil.savePickle(residpath, td, residdf)
 
 	engine = dbaccessor.getdb('localhost', 'zhenggq', 'Yuzhong0931', 'advancedb', 1433)
-	#residdb.insertData(dtype, engine, residdf)
-	residdb.insertDataClosePrice(dtype, engine, residdf)
+	residdb.insertData(dtype, engine, residdf)
+	#residdb.insertDataClosePrice(dtype, engine, residdf)
 
 	t4 = datetime.datetime.now()
 	print 'Cost insertdb: {0} on {1}'.format(t4-t3, td.strftime('%Y%m%d'))
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	
 	removeCols = dataapi.removeCols
 	keyCols = dataapi.keyCols
-	includeCols = ['NonRestrictedCap', 'ClosePrice_CreateDate_Wind', 'ClosePrice_SettleDate_Wind']
+	includeCols = dataapi.inlcudeCols
 	excludeCols = dataapi.excludeCols
 	createDate = dataapi.createDate
 	settleDate = dataapi.settleDate
