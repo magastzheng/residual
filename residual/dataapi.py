@@ -12,27 +12,6 @@ keyCols = ['TradingDay', 'SecuCode', 'SecuAbbr', 'IndustrySecuCode_I', 'ExeClose
 excludeCols = ['TradingDay', 'SecuCode', 'SecuAbbr', 'IndustrySecuCode_I', 'FirstIndustryName', 'IndustrySecuCode_II', 'SecondIndustryName', 'EndDate', 'MaxEfctInfoPublDate', 'IndusInnerCode']
 includeCols = ['ClosePrice','OpenPrice','HighPrice','LowPrice','ExeClosePrice','ExeOpenPrice','ExeHighPrice','ExeLowPrice','NonRestrictedShares','AFloats','TotalShares','TurnoverVolume','NonRestrictedCap','AFloatsCap','TotalCap','PE','PB','PS','PCF','DividendYield','DividendRatio','TTMIncome','GP_Margin','NP_Margin','ROA','ROE','AssetsTurnover','EquityTurnover','Cash_to_Assets','Liability_to_Assets','EquityMultiplier','CurrentRatio','Income_Growth_YOY_Comparable','NPPC_Growth_YOY_Comparable','GP_Margin_Comparable','GP_Margin_Growth_YOY_Comparable','NP_Margin_Comparable','NP_Margin_Growth_YOY_Comparable','Income_Growth_Pre_Comparable','NPPC_Growth_Pre_Comparable','GP_Margin_Growth_Pre_Comparable','NP_Margin_Growth_Pre_Comparable','NPPC_Growth_Pre_Season','NPPC_Growth_YOY_Season','NPLNRP_Growth_Pre_Season','NPLNRP_Growth_YOY_Season','Income_Growth_Pre_Season','Income_Growth_YOY_Season','Income_Growth_Qtr_Comparable','NPPC_Growth_Qtr_Comparable','GP_Margin_Qtr','GP_Margin_Growth_Qtr_Comparable','IPS_Qtr','EPS_Qtr','ROE_Qtr','Income_Growth_Pre','NPPC_Growth_Pre','NPLNRP_Growth_Pre','GP_Margin_Growth_Pre','NP_Margin_Growth_Pre','Income_Growth_YOY','NPPC_Growth_YOY','NPLNRP_Growth_YOY','GP_Margin_Growth_YOY','NP_Margin_Growth_YOY','IPS','EPS','CFPS','Pre_IPS','Pre_EPS','Pre_CFPS','YOY_IPS','YOY_EPS','YOY_CFPS','rPE','rPB','rPS','rPCF','SettlePrice','ExecutivesProp','InstitutionNum','InstitutionProp','RegionScore', 'Momentum20Day','Momentum40Day','Momentum60Day','Momentum120Day','Momentum180Day','Momentum240Day','PriceDiff','DayDiff','TurnoverRatio','AvgTurnoverPrice','AvgTurnoverPriceFactor','AvgTurnoverRatio5Day','AvgTurnoverRatio10Day','AvgTurnoverRatio20Day','AvgTurnoverRatio40Day','AvgTurnoverRatio60Day','AvgTurnoverRatio120Day', 'E_EPS', 'E_growth', 'FreeFloat_Total', 'EPS_CFPS']
 
-#获取交易日
-#TradingDay type
-#1 - All TraingDay
-#2 - Weekly TradingDay
-#3 - Monthly TradingDay
-tdtypes = {
-		"d": getTradingDay,
-		"w": getWeeklyTradingDay,
-		"m": getMonthlyTradingDay
-}
-
-#获取不同频率数据
-#TradingDay type
-#1 - All TraingDay
-#2 - Weekly TradingDay
-#3 - Monthly TradingDay
-fdtypes = {
-	'd': getFactorDailyData,
-	'w': getFactorWeeklyData,
-	'm': getFactorMonthlyData,
-}
 
 def getengine():
 		host = '176.1.11.55'
@@ -123,6 +102,28 @@ def getFactorMonthlyData(td):
 		engine = getengine()
 		df = dbaccessor.query(engine, sql)
 		return df
+
+#获取交易日
+#TradingDay type
+#1 - All TraingDay
+#2 - Weekly TradingDay
+#3 - Monthly TradingDay
+tdtypes = {
+		"d": getTradingDay,
+		"w": getWeeklyTradingDay,
+		"m": getMonthlyTradingDay
+}
+
+#获取不同频率数据
+#TradingDay type
+#1 - All TraingDay
+#2 - Weekly TradingDay
+#3 - Monthly TradingDay
+fdtypes = {
+	'd': getFactorDailyData,
+	'w': getFactorWeeklyData,
+	'm': getFactorMonthlyData,
+}
 
 def getDayList(dtype):
 		"""	获取指定类型的交易日列表

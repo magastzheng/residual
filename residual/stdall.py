@@ -28,8 +28,10 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 	columns = df.columns
 	#生成数据对象，用来存放标准化之后数据
 	newdf = df.loc[:, keyCols]
-	industries = df['IndustrySecuCode_I'].dropna().unique()
-	
+
+	#获取所有行业不为空的股票
+	df = df[pd.notnull(df['IndustrySecuCode_I'])]
+
 	for column in columns:
 		if column in excludeCols:
 			print 'skip the column: {0}'.format(column)
@@ -37,20 +39,18 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 		elif column in includeCols:
 			#print 'handle the column: {0}'.format(column)
 			newdf[column] = np.nan
-			for industry in industries:
-				indusdata = df[df['IndustrySecuCode_I'] == industry]
 				
-				#获取当前列值不为空值和无效值10000的行
-				validrowdata = indusdata[pd.notnull(df[column]) & (df[column] != 10000)]
+			#获取当前列值不为空值和无效值10000的行
+			validrowdata = df[pd.notnull(df[column]) & (df[column] != 10000)]
 				
-				#获取当前列数据
-				induscoldata = validrowdata[column]
+			#获取当前列数据
+			coldata = validrowdata[column]
 
-				#添加特殊逻辑，对某些列不做处理
-				stddata = stdcalc.getStandardData(induscoldata, industry)
-				#将数据更新到主表中
-				for idx in stddata.index:
-					newdf.loc[idx, column] = stddata[idx]
+			#添加特殊逻辑，对某些列不做处理
+			stddata = stdcalc.getStandardData(coldata, column)
+			#将数据更新到主表中
+			for idx in stddata.index:
+				newdf.loc[idx, column] = stddata[idx]
 
 		else:
 				print 'Cannot support: {0}'.format(column)

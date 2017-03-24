@@ -1,0 +1,27 @@
+python D:\workspace\python\residual\std.py 'm' '20160101' '20170331' 'D:/workspace/python/residual/result/monthly/'
+python D:\workspace\python\residual\std.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/result/monthly/'
+python D:\workspace\python\residual\std.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/result/monthly/'
+python D:\workspace\python\residual\std.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/result/monthly/'
+python D:\workspace\python\residual\std.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/result/monthly/'
+python D:\workspace\python\residual\std.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/result/monthly/'
+
+
+python D:\workspace\python\residual\residual.py 'm' '20160101' '20170331' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residual.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residual.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residual.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residual.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residual.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+
+
+python D:\workspace\python\residual\residdb.py 'm' '20160101' '20170331' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residdb.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residdb.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residdb.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residdb.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/resid/monthly/'
+python D:\workspace\python\residual\residdb.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/resid/monthly/'
+
+
+python D:\workspace\python\residual\residual.py 'm' '20090101' '20170331' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
+
+python D:\workspace\python\residual\residual.py 'm' '20000101' '20081231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/resid/monthly/'
