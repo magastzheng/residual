@@ -159,6 +159,7 @@ def insertResid(conn, df, tbname):
 					Column('E_growth', Float()),
 					Column('FreeFloat_Total', Float()),
 					Column('EPS_CFPS', Float()),
+					Column('AvgTurnoverValue', Float()),
 					)
 
 	insert(conn, residtb, df)
