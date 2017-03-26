@@ -10,7 +10,9 @@ import statsmodels.api as sm
 import dataapi
 import fileutil
 
-logfile='D:/residual.log'
+now = datetime.datetime.now()
+logfile='D:/noconstresidual_{0}.log'.format(now.strftime('%Y%m%d%H%M%S'))
+retrylogfile='D:/noconstresidual_retry_{0}.log'.format(now.strftime('%Y%m%d%H%M%S'))
 
 def writeLog(fileName, text):
 		fileObj = open(fileName, 'a+')
@@ -33,8 +35,8 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 			return None
 
 		#如果是流通市值，不需要再跟自己回归	
-		X = sm.add_constant(df[nmmv])
-		#X = df[nmmv]
+		#X = sm.add_constant(df[nmmv])
+		X = df[nmmv]
 		X = pd.concat([X[:], df[newIndusColumns]], axis=1)
 		if column == nmmv:
 			#remove  column
@@ -44,12 +46,24 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 		#model = sm.OLS(df[column], df.loc[:,allCols])
 		model = smf.OLS(Y, X)
 		results = model.fit()
-		#raise Exception
-		#print results.summary()
 		
 		text = '{0}'.format(results.summary())
 		writeLog(logfile, text)
+		#如果存在警告，再做一次回归
+		if results.eigenvals[-1] < 1e-10:
+				invalidcols = results.params[abs(results.params) < 1e-5].index
+				removecols = invalidcols.tolist()
+				X=X.drop(removecols, axis=1)
+				model = smf.OLS(Y, X)
+				results = model.fit()
+				
+				text = '{0}'.format(results.summary())
+				writeLog(retrylogfile, text)
 
+		#print results.summary()
+		#if column == 'rPE':
+		#		raise Exception
+		
 		return results.resid
 
 def appendIndustryColumn(df, industryColumns):

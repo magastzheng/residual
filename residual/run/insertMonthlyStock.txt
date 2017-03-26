@@ -6,10 +6,14 @@ python D:\workspace\python\residual\stresidual.py 'm' '20040101' '20061231' 'D:/
 python D:\workspace\python\residual\stresidual.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/' 'D:/workspace/python/residual/stock/monthly/'
 
 
-python D:\workspace\python\residual\deltadb.py 'm' '20160101' '20170331' 'D:/workspace/python/residual/stock/monthly/'
-#python D:\workspace\python\residual\deltadb.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/stock/monthly/'
-#python D:\workspace\python\residual\deltadb.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/stock/monthly/'
-#python D:\workspace\python\residual\deltadb.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/stock/monthly/'
-#python D:\workspace\python\residual\deltadb.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/stock/monthly/'
-#python D:\workspace\python\residual\deltadb.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/stock/monthly/'
+python D:\workspace\python\residual\stresiddb.py 'm' '000001' '000005' 'D:/workspace/python/residual/stock/monthly/'
+#python D:\workspace\python\residual\stresiddb.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/stock/monthly/'
+#python D:\workspace\python\residual\stresiddb.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/stock/monthly/'
+#python D:\workspace\python\residual\stresiddb.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/stock/monthly/'
+#python D:\workspace\python\residual\stresiddb.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/stock/monthly/'
+#python D:\workspace\python\residual\stresiddb.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/stock/monthly/'
+
+异常
+002822
+002823
 

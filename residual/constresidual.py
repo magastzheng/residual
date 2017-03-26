@@ -10,7 +10,7 @@ import statsmodels.api as sm
 import dataapi
 import fileutil
 
-logfile='D:/residual.log'
+logfile='D:/constresidual.log'
 
 def writeLog(fileName, text):
 		fileObj = open(fileName, 'a+')
@@ -32,23 +32,29 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 		if df is None or len(df) < 2:
 			return None
 
-		#如果是流通市值，不需要再跟自己回归	
+		#加入截距项
 		X = sm.add_constant(df[nmmv])
-		#X = df[nmmv]
 		X = pd.concat([X[:], df[newIndusColumns]], axis=1)
+		#如果是流通市值，不需要再跟自己回归	
 		if column == nmmv:
-			#remove  column
 			X=X.drop([nmmv], axis=1)
 		
 		Y = df[column]
-		#model = sm.OLS(df[column], df.loc[:,allCols])
 		model = smf.OLS(Y, X)
 		results = model.fit()
-		#raise Exception
-		#print results.summary()
-		
+
 		text = '{0}'.format(results.summary())
 		writeLog(logfile, text)
+		#如果存在警告，再做一次回归
+		if results.eigenvals[-1] < 1e-10:
+				invalidcols = results.params[abs(results.params) < 1e-5].index
+				removecols = invalidcols.tolist()
+				X=X.drop(removecols, axis=1)
+				model = smf.OLS(Y, X)
+				results = model.fit()
+				
+				text = '{0}'.format(results.summary())
+				writeLog(logfile, text)
 
 		return results.resid
 
