@@ -23,6 +23,12 @@ def getMonthlyStockData(secucode, path):
 	df = dbaccessor.query(engine, sql)
 	return df
 
+def getFactorDataSql(td, filename, path):
+	filepath = '{0}/sql/{1}'.format(path, filename)
+	fmt = getSqlFormat(filepath)
+
+	return fmt.format(td.strftime('%Y%m%d'))
+
 def getFactorMonthlyDataSql(td, path):
 	filename = 'sql/queryfactormonthly.sql'
 	filepath = '{0}{1}'.format(path, filename)
@@ -31,8 +37,22 @@ def getFactorMonthlyDataSql(td, path):
 	return fmt.format(td.strftime('%Y%m%d'))
 
 def getFactorMonthlyData(td, path):
-	sql = getFactorMonthlyDataSql(td, path)
-	
+	sql = getFactorDataSql(td, 'queryfactormonthly.sql', path)
+
 	engine = dataapi.getengine()
 	df = dbaccessor.query(engine, sql)
+	return df
+
+fdtypes = {
+	'd': None,
+	'w': None,
+	'm': getFactorMonthlyData
+}
+
+def getFactorData(dtype, td, path):
+	fn = fdtypes.get(dtype, getFactorMonthlyData)
+	df = None
+	if fn is not None:
+		df = fn(td, path)
+	
 	return df

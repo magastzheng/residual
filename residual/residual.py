@@ -10,6 +10,15 @@ import statsmodels.api as sm
 import dataapi
 import fileutil
 
+logfile='D:/residual.log'
+
+def writeLog(fileName, text):
+		fileObj = open(fileName, 'a+')
+		try:
+				fileObj.write(text)
+		finally:
+				fileObj.close()
+
 def calcOneFactor(df, newIndusColumns, column, nmmv):
 		"""	df - pandas DataFrame对象，为某天标准化后的因子数据
 			newIndusColumns - 行业因子名称列表
@@ -18,24 +27,29 @@ def calcOneFactor(df, newIndusColumns, column, nmmv):
 			
 			return -  pandas Series对象表示的残差
 		"""
-		#去掉空值
-		df = df[df[column].isnull() == False]
-		if df is None or len(df) == 0:
+		#只选择当前列和回归列都有效的列
+		df = df[pd.notnull(df[column]) & pd.notnull(df[nmmv])]
+		if df is None or len(df) < 2:
 			return None
 
 		#如果是流通市值，不需要再跟自己回归	
-		X = sm.add_constant(df[nmmv])
+		#X = sm.add_constant(df[nmmv])
+		X = df[nmmv]
+		X = pd.concat([X[:], df[newIndusColumns]], axis=1)
 		if column == nmmv:
 			#remove  column
 			X=X.drop([nmmv], axis=1)
 		
-		X = pd.concat([X[:], df[newIndusColumns]], axis=1)
 		Y = df[column]
 		#model = sm.OLS(df[column], df.loc[:,allCols])
 		model = smf.OLS(Y, X)
 		results = model.fit()
-		raise Exception
+		#raise Exception
 		#print results.summary()
+		
+		text = '{0}'.format(results.summary())
+		writeLog(logfile, text)
+
 		return results.resid
 
 def appendIndustryColumn(df, industryColumns):
