@@ -40,6 +40,7 @@ def getTradingDay():
 	
 	return df
 
+
 #获取指定那天因子数据
 def getFactorDailyData(td):
 		'''需要传入一个时间类型 date 或 datetime'''
@@ -103,6 +104,73 @@ def getFactorMonthlyData(td):
 		df = dbaccessor.query(engine, sql)
 		return df
 
+def getMonthlyStocks():
+	sql = '''select distinct SecuCode
+			from baozh.dbo.FactorMonthly_Comparable
+			order by SecuCode
+		  '''
+	engine = getengine()
+	df = dbaccessor.query(engine, sql)
+	
+	return df
+
+#从每日数据中获取某种股票某交易日的数据
+def getFactorDailyStockData(secucode):
+		"""	secucode - 股票代码
+		"""
+		sql = '''select 
+				 *
+				 from baozh.dbo.FactorDaily_Comparable
+				 where SecuCode='{0}'
+				 order by TradingDay desc
+			'''.format(secucode)
+		
+		engine = getengine()
+		df = dbaccessor.query(engine, sql)
+		return df
+
+#从周数据中获取某种股票的数据
+def getFactorTradingDayStockData(secucode):
+		"""	secucode - 股票代码
+		"""
+		sql = '''select 
+				 *
+				 from baozh.dbo.FactorTradingDay_Comparable
+				 where SecuCode='{0}'
+				 order by TradingDay desc
+			'''.format(secucode)
+
+		engine = getengine()
+		df = dbaccessor.query(engine, sql)
+		return df
+
+#从月数据中获取某种股票的数据
+def getFactorMonthlyStockData(secucode):
+		"""	secucode - 股票代码
+		"""
+		sql = '''select 
+				 *
+				 from baozh.dbo.FactorMonthly_Comparable
+				 where SecuCode='{0}'
+				 order by TradingDay desc
+			'''.format(secucode)
+		
+		engine = getengine()
+		df = dbaccessor.query(engine, sql)
+		return df
+
+def getFactorMonthlyDelta():
+	
+	sql = '''
+			select * from advancedb.dbo.FactorMonthlyTopBottomDelta
+			order by TradingDay desc
+		'''
+
+	engine = getengine()
+	df = dbaccessor.query(engine, sql)
+	return df
+
+
 #获取交易日
 #TradingDay type
 #1 - All TraingDay
@@ -123,6 +191,21 @@ fdtypes = {
 	'd': getFactorDailyData,
 	'w': getFactorWeeklyData,
 	'm': getFactorMonthlyData,
+}
+
+#获取不同频率数据
+#TradingDay type
+#1 - All TraingDay
+#2 - Weekly TradingDay
+#3 - Monthly TradingDay
+stdtypes = {
+	'd': getFactorDailyStockData,
+	'w': getFactorTradingDayStockData,
+	'm': getFactorMonthlyStockData,
+}
+
+deltatypes = {
+	'm': getFactorMonthlyDelta,				
 }
 
 def getDayList(dtype):
@@ -146,5 +229,24 @@ def getFactorData(dtype, td):
 		"""
 		fn = fdtypes.get(dtype, getFactorDailyData)
 		df = fn(td)
+
+		return df
+
+def getFactorStockData(dtype,secucode):
+		"""	获取指定类型、指定股票在指定交易日的因子数据
+			dtype - 字符表示交易日类型，每天/每周/每月
+			secucode - 股票代码
+
+			return - pandas DataFrame类型的数据
+		"""
+		fn = stdtypes.get(dtype, getFactorDailyStockData)
+		df = fn(secucode)
+
+		return df
+
+def getFactorDelta(dtype):
+		
+		fn = deltatypes.get(dtype, getFactorMonthlyDelta)
+		df = fn()
 
 		return df

@@ -41,7 +41,7 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 				indusdata = df[df['IndustrySecuCode_I'] == industry]
 				
 				#获取当前列值不为空值和无效值10000的行
-				validrowdata = indusdata[pd.notnull(df[column]) & (df[column] != 10000)]
+				validrowdata = indusdata[pd.notnull(indusdata[column]) & (indusdata[column] != 10000)]
 				
 				#获取当前列数据
 				induscoldata = validrowdata[column]

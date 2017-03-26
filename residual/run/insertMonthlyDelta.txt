@@ -1,0 +1,21 @@
+python D:\workspace\python\residual\delta.py 'm' '20160101' '20170331' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/delta/monthly/'
+python D:\workspace\python\residual\delta.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/delta/monthly/'
+python D:\workspace\python\residual\delta.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/delta/monthly/'
+python D:\workspace\python\residual\delta.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/delta/monthly/'
+python D:\workspace\python\residual\delta.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/delta/monthly/'
+python D:\workspace\python\residual\delta.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/result/monthly/' 'D:/workspace/python/residual/delta/monthly/'
+
+
+python D:\workspace\python\residual\deltadb.py 'm' '20160101' '20170331' 'D:/workspace/python/residual/delta/monthly/'
+#python D:\workspace\python\residual\deltadb.py 'm' '20130101' '20151231' 'D:/workspace/python/residual/delta/monthly/'
+#python D:\workspace\python\residual\deltadb.py 'm' '20100101' '20121231' 'D:/workspace/python/residual/delta/monthly/'
+#python D:\workspace\python\residual\deltadb.py 'm' '20070101' '20091231' 'D:/workspace/python/residual/delta/monthly/'
+#python D:\workspace\python\residual\deltadb.py 'm' '20040101' '20061231' 'D:/workspace/python/residual/delta/monthly/'
+#python D:\workspace\python\residual\deltadb.py 'm' '20000101' '20031231' 'D:/workspace/python/residual/delta/monthly/'
+
+
+
+257
+
+topM	bottomM
+-0.58736296	0.200984015

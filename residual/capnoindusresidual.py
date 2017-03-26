@@ -10,117 +10,28 @@ import statsmodels.api as sm
 import dataapi
 import fileutil
 
-def calcOneFactor(df, newIndusColumns, column, nmmv):
+def calcOneFactor(df, column, nmmv):
 		"""	df - pandas DataFrame对象，为某天标准化后的因子数据
-			newIndusColumns - 行业因子名称列表
 			column - 当前因子名称，因变量
 			nmmv - 自由流通市值名称，自变量
 			
 			return -  pandas Series对象表示的残差
 		"""
 		#去掉空值
-		df = df[df[column].isnull() == False]
-		if df is None or len(df) == 0:
+		df = df[pd.notnull(df[column]) & pd.notnull(df[nmmv])]
+		if df is None or len(df) < 2:
 			return None
 
-		#如果是流通市值，不需要再跟自己回归	
+		#仅对流通市值回归	
 		X = sm.add_constant(df[nmmv])
-		if column == nmmv:
-			#remove  column
-			X=X.drop([nmmv], axis=1)
-		
-		X = pd.concat([X[:], df[newIndusColumns]], axis=1)
 		Y = df[column]
-		#model = sm.OLS(df[column], df.loc[:,allCols])
 		model = smf.OLS(Y, X)
 		results = model.fit()
-		raise Exception
+		#raise Exception
 		#print results.summary()
 		return results.resid
 
-def appendIndustryColumn(df, industryColumns):
-		"""
-			df - pandas DataFrame对象，为某天因子数据
-			industryColumns - 字符串列表，存放新行业列名
-		"""
-		print 'appendIndustryColumn start....'
-		for industryColumn in industryColumns:
-			#df.loc[:, industryColumn]=0
-			df[industryColumn] = 0
-			
-		print 'appendIndustryColumn end....'
-
-		return df
-
-def updateIndustryData(df, newIndusColumns, industryCodes, industryColumn='IndustrySecuCode_I'):
-		"""	df - pandas DataFrame对象
-			newIndusColumns - 对行业生成的新列，列名为Indus_x
-			industryCodes - 一级行业代码列表
-			industryColumn - 一级行业数据库表列名
-		"""
-		print 'updateIndustryData start....'
-		for industryCode in industryCodes:
-			idx = -1
-			if industryCode in industryCodes:
-				idx = industryCodes.index(industryCode)
-			if idx >= 0 and idx < len(newIndusColumns):
-				newIndusColumn = newIndusColumns[idx]
-				df.loc[df[industryColumn] == industryCode, newIndusColumn] = 1
-		
-		print 'updateIndustryData start....'
-
-		return df
-
-def getAllIndustries(df, industryColumn):
-		"""	df - pandas DataFrame对象
-			industryColumn - 数据库表中的一级行业列名
-			return - 去重排序后一级行业代码
-		"""
-		industries = df[industryColumn].dropna().unique().tolist()
-		industries.sort()
-
-		return industries
-
-def getIndustryColumnName(industries):
-		"""
-			industries - 一级行业代码列表
-			return - 新行业列名表
-		"""
-		prefix="Indus_{0}"
-
-		indusColumns = []
-		length = len(industries)
-		for i in range(1, length+1):
-				name=prefix.format(i)
-				#print name
-				indusColumns.append(name)
-		return indusColumns
-
-#def getIndustryData(industries, industry):
-#	arr = np.zeros(len(industries))
-#	inlist = industries.tolist()
-#	if industry in inlist:
-#			idx = inlist.index(industry)
-#			arr[idx] = 1
-#	return arr
-
-def preprocessData(df):
-	"""	df - pandas DataFrame对象，其中数据是已经标准化之后的
-		return - 新列名，list类型
-	"""
-	
-	#取所有行业
-	industries = getAllIndustries(df, 'IndustrySecuCode_I')
-	#生成新的行业列名
-	newIndusColumns = getIndustryColumnName(industries)
-	#添加新的列
-	appendIndustryColumn(df, newIndusColumns)
-	#对象了求值		
-	updateIndustryData(df, newIndusColumns, industries, 'IndustrySecuCode_I')
-	
-	return newIndusColumns
-
-def getOneDayResid(df, newIndusColumns,  keyCols, includeCols, excludeCols):		
+def getOneDayResid(df,  keyCols, includeCols, excludeCols):		
 	"""	df - pandas DataFrame对象，df中的数据已经将没有行业的行去除掉，并添加行业列，如果属于该行业，则本列为1，否则为0
 		keyCols - 新的pandas DataFrame对象中，必须保留的列，list类型
 		includeCols - 需要处理的列名，list类型
@@ -135,7 +46,7 @@ def getOneDayResid(df, newIndusColumns,  keyCols, includeCols, excludeCols):
 		if column in includeCols:
 			#print column
 			newdf[column] = np.nan
-			resid = calcOneFactor(df, newIndusColumns, column, 'NonRestrictedCap')
+			resid = calcOneFactor(df, column, 'NonRestrictedCap')
 			if resid is not None and len(resid) > 0:
 				for idx in resid.index:
 					newdf.loc[idx, column] = resid[idx]
@@ -160,10 +71,9 @@ def calcResidual(td, df, keyCols, includeCols, excludeCols):
 	#去掉行业为空的行
 	print 'preprocess'
 	df = df.dropna(subset=['IndustrySecuCode_I'])
-	newIndusColumns = preprocessData(df)
 	
 	print 'calculate ....'
-	newdf = getOneDayResid(df, newIndusColumns, keyCols, includeCols, excludeCols)
+	newdf = getOneDayResid(df, keyCols, includeCols, excludeCols)
 	
 	return newdf
 
@@ -238,6 +148,9 @@ if __name__ == '__main__':
 		excludeCols = dataapi.excludeCols
 		createDate = dataapi.createDate
 		settleDate = dataapi.settleDate
+		nmmv = 'NonRestrictedCap'
+		if nmmv in includeCols:
+				includeCols.remove(nmmv)
 		#tddf = dataapi.getTradingDay()
 		#tddf['TradingDay'] = tddf['TradingDay'].apply(lambda x:datetime.datetime.strptime(x, '%Y%m%d'))
 		#tradingDays = tddf['TradingDay'].tolist()
