@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import dataapi
+import datasql
 import fileutil
 import stdcalc
 
@@ -41,7 +42,7 @@ def handleStandard(df, keyCols, includeCols, excludeCols):
 			newdf[column] = np.nan
 				
 			#获取当前列值不为空值和无效值10000的行
-			validrowdata = df[pd.notnull(df[column]) & (df[column] != 10000)]
+			validrowdata = df[pd.notnull(df[column]) & ((df[column] <= 9999.99) | (df[column] >= 10000.0001))]
 				
 			#获取当前列数据
 			coldata = validrowdata[column]
@@ -67,13 +68,14 @@ def handleOneDay(df, removeCols, keyCols, includeCols, excludeCols):
 		return - DataFrame类型
 	"""
 
-	df = preprocessData(df, removeCols)
+	#df = preprocessData(df, removeCols)
 	newdf = handleStandard(df, keyCols, includeCols, excludeCols)
 
 	return newdf
 
-def handleAllDay(filepath, tradingDays, dtype, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate):
+def handleAllDay(filepath, sqlpath, tradingDays, dtype, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate):
 	""" filepath - 文件输出目录
+		sqlpath - sql文件位置
 		tradingDays - 交易日列表
 		dtype - 字符类型表示交易日的类型，每日/周/月
 		removeCols - 需要删掉的无用列列名，为list类型
@@ -89,7 +91,8 @@ def handleAllDay(filepath, tradingDays, dtype, removeCols, keyCols, includeCols,
 		print 'handle {0}'.format(td.strftime('%Y%m%d'))
 		start = datetime.datetime.now()
 		#df = dataapi.getFactorDailyData(td)
-		df = dataapi.getFactorData(dtype, td)
+		#df = dataapi.getFactorData(dtype, td)
+		df = datasql.getFactorData(dtype, td, sqlpath)
 		actualKeyCols = list(keyCols)
 		if settleDate in df.columns:
 			actualKeyCols.insert(0, settleDate)
@@ -97,19 +100,20 @@ def handleAllDay(filepath, tradingDays, dtype, removeCols, keyCols, includeCols,
 			actualKeyCols.insert(0, createDate)
 		
 		newdf = handleOneDay(df, removeCols, actualKeyCols, includeCols, excludeCols)
+
 		fileutil.savePickle(filepath, td, newdf)
 		
 		end = datetime.datetime.now()
 		print 'Cost: {0} on: {1}'.format(end - start, td.strftime('%Y%m%d'))
 
 if __name__ == '__main__':
-	"""用法： python std.py 'd|w|m' '20140101' '20141231' ['filepath']
+	"""用法： python std.py 'd|w|m' '20140101' '20141231' ['filepath'] ['sqlpath']
 	"""
 	dtype = 'd'
 	start = datetime.datetime.min
 	end = datetime.datetime.now()
 	filepath = ''
-
+	sqlpath = ''
 	params = sys.argv[1:]
 	
 	if len(params) >= 1:
@@ -119,11 +123,16 @@ if __name__ == '__main__':
 		end = datetime.datetime.strptime(params[2], '%Y%m%d')
 	if len(params) >= 4:
 		filepath=params[3]
-	
+	if len(params) >= 5:
+		sqlpath=params[4]
+
 	if len(filepath) == 0:
 		filepath='D:/workspace/python/residual/result/'
 	
-	print 'dtype: {0}, start {1}, end {2}, result path: {3}'.format(dtype, start.strftime('%Y%m%d'), end.strftime('%Y%m%d'), filepath)
+	if len(sqlpath) == 0:
+		sqlpath='D:/workspace/python/residual/'
+
+	print 'dtype: {0}, start {1}, end {2}, result path: {3}, sql path: {4}'.format(dtype, start.strftime('%Y%m%d'), end.strftime('%Y%m%d'), filepath, sqlpath)
 
 	#标准化处理
 	removeCols = dataapi.removeCols
@@ -139,4 +148,4 @@ if __name__ == '__main__':
 	tradingDays = dataapi.getDayList(dtype)
 	tds = [i for i in tradingDays if i >= start and i <= end]
 	
-	handleAllDay(filepath, tds, dtype, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate)
+	handleAllDay(filepath, sqlpath, tds, dtype, removeCols, keyCols, includeCols, excludeCols, createDate, settleDate)
